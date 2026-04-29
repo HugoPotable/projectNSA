@@ -1,213 +1,326 @@
 import {
   Globe,
-  ShieldCheck,
   Server,
   Layout,
   Database,
   Lock,
-  Cloud,
   Network,
-  ArrowLeftRight,
-  Monitor,
-  Settings,
+  Shield,
+  Power,
+  Key,
+  Github,
 } from 'lucide-react';
 
-import Device from './components/Device';
-import VlanHeader from './components/VlanHeader';
+import SiteCard from './components/SiteCard';
+import FlowLegend from './components/FlowLegend';
 
 const App = () => {
   return (
-    <div className="min-h-screen bg-slate-50 p-8 font-sans text-slate-900">
-      <div className="max-w-6xl mx-auto">
+    <div
+      className="min-h-screen text-slate-900 font-sans"
+      style={{
+        background:
+          'radial-gradient(circle at 1px 1px, rgba(15, 23, 42, 0.06) 1px, transparent 0) 0 0 / 22px 22px, linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%)',
+      }}
+    >
+      <div className="max-w-7xl mx-auto px-4 md:px-8 py-10">
         {/* Header */}
-        <header className="mb-12 text-center">
-          <h1 className="text-3xl font-extrabold text-slate-800 flex items-center justify-center gap-3">
-            <Network className="text-indigo-600" />
-            Infrastructure Réseau Multi-Site
-          </h1>
-          <p className="text-slate-500 mt-2">
-            Interconnexion Proxmox On-Premise & Cloud via OpenVPN
-          </p>
+        <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
+          <div>
+            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-indigo-600">
+              <Network size={14} />
+              CIA — Cloud Infrastructure Architects
+            </div>
+            <h1 className="text-3xl md:text-4xl font-extrabold text-slate-800 mt-2 leading-tight">
+              Hybrid Infrastructure with Proxmox
+            </h1>
+            <p className="text-slate-500 mt-2 max-w-2xl">
+              Two Proxmox sites — on-premise &amp; remote — joined by an encrypted
+              site-to-site OpenVPN tunnel. Per-VLAN segmentation, single bastion entry,
+              centralised observability.
+            </p>
+          </div>
+          <a
+            href="https://github.com/EpitechMscProPromo2027/T-NSA-810-NCY_7"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 text-xs font-medium bg-white border border-slate-200 hover:border-indigo-300 hover:text-indigo-700 text-slate-600 rounded-lg px-3 py-2 transition-colors shadow-sm"
+          >
+            <Github size={14} />
+            Source &amp; documentation
+          </a>
         </header>
 
-        {/* Internet & External Access */}
-        <div className="flex justify-center mb-12 relative">
-          <div className="bg-white px-6 py-4 rounded-2xl shadow-md border-2 border-dashed border-indigo-200 flex flex-col items-center z-10">
-            <Globe className="text-indigo-400 mb-2" size={32} />
-            <span className="font-bold text-indigo-900 uppercase tracking-widest text-sm">
-              Internet
-            </span>
-            <div className="mt-2 flex items-center gap-2 text-[10px] bg-amber-50 text-amber-700 px-3 py-1 rounded-full border border-amber-200">
-              <Lock size={12} />
-              Accès restreint au Bastion (Site 2)
-            </div>
-          </div>
-          {/* Connection to S2 Bastion */}
-          <div className="absolute top-full h-24 w-px bg-gradient-to-b from-indigo-200 to-transparent left-1/2 -translate-x-1/2" />
+        {/* Top-level facts */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
+          <FactCard label="Sites" value="2 + 1 reserved" hint="S1 on-prem, S2 cloud, S3 ready" />
+          <FactCard label="VMs / site" value="3 max" hint="Hard project constraint" />
+          <FactCard label="VLANs" value="Admin / Services / DMZ" hint="Default-deny per zone" />
+          <FactCard label="Tunnel" value="OpenVPN P2P SSL/TLS" hint="AES-256-GCM · 10.0.0.0/30" />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 relative">
-          {/* VPN Tunnel Overlay */}
-          <div className="absolute top-20 left-1/4 right-1/4 h-12 border-t-4 border-dashed border-indigo-400 rounded-t-[100px] pointer-events-none flex justify-center items-start">
-            <div className="bg-indigo-600 text-white text-[10px] font-bold px-4 py-1 rounded-full -mt-3 shadow-lg flex items-center gap-2">
-              <ArrowLeftRight size={12} />
-              TUNNEL VPN P2P (OpenVPN) - 10.254.0.0/24
+        {/* Internet bubble */}
+        <div className="flex flex-col items-center mb-2">
+          <div className="bg-white px-5 py-3 rounded-full shadow-md border border-amber-200 flex items-center gap-3">
+            <div className="bg-amber-100 text-amber-600 p-2 rounded-full">
+              <Globe size={18} />
             </div>
-          </div>
-
-          {/* SITE 1 */}
-          <div className="bg-slate-100 rounded-3xl p-6 border border-slate-200 shadow-xl">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-xl font-black text-slate-700">
-                  SITE 1 : ON-PREMISE
-                </h2>
-                <div className="flex items-center gap-2 text-xs text-indigo-600 font-semibold uppercase tracking-tighter">
-                  <Monitor size={14} /> Proxmox Node 1
-                </div>
+            <div className="leading-tight">
+              <div className="text-[10px] uppercase tracking-widest font-bold text-amber-700">
+                Internet
               </div>
-              <div className="bg-white px-3 py-1 rounded-lg shadow-sm border border-slate-200 text-[10px] font-mono">
-                s1.projet.local
-              </div>
-            </div>
-
-            {/* S1 pfSense */}
-            <div className="mb-8 flex justify-center">
-              <div className="w-full max-w-sm">
-                <Device
-                  icon={ShieldCheck}
-                  name="pfSense (S1)"
-                  role="Routeur / Firewall / DNS"
-                  ip="WAN: Epitech Network"
-                  color="indigo"
-                  details={["DNS Forwarder vers S2", "Point de terminaison VPN"]}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              {/* VLAN Admin S1 */}
-              <div className="space-y-4">
-                <VlanHeader name="VLAN Admin" subnet="10.10.10.0/24" color="emerald" />
-                <Device
-                  icon={Layout}
-                  name="NetBox"
-                  role="IPAM / DCIM"
-                  ip="10.10.10.10"
-                  color="emerald"
-                />
-              </div>
-
-              {/* VLAN Services S1 */}
-              <div className="space-y-4">
-                <VlanHeader name="VLAN Services" subnet="10.10.20.0/24" color="blue" />
-                <Device
-                  icon={Database}
-                  name="Elasticsearch"
-                  role="Logs / Monitoring"
-                  ip="10.10.20.10"
-                  color="blue"
-                />
+              <div className="text-[11px] text-slate-500">
+                Only TCP/22 → bastion (Site 2). Everything else: deny.
               </div>
             </div>
           </div>
-
-          {/* SITE 2 */}
-          <div className="bg-slate-100 rounded-3xl p-6 border border-slate-200 shadow-xl">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-xl font-black text-slate-700">
-                  SITE 2 : CLOUD
-                </h2>
-                <div className="flex items-center gap-2 text-xs text-indigo-600 font-semibold uppercase tracking-tighter">
-                  <Cloud size={14} /> Proxmox Node 2
-                </div>
-              </div>
-              <div className="bg-white px-3 py-1 rounded-lg shadow-sm border border-slate-200 text-[10px] font-mono">
-                s2.projet.local
-              </div>
-            </div>
-
-            {/* S2 pfSense */}
-            <div className="mb-8 flex justify-center">
-              <div className="w-full max-w-sm">
-                <Device
-                  icon={ShieldCheck}
-                  name="pfSense (S2)"
-                  role="Routeur / Firewall / DNS"
-                  ip="WAN: Epitech Network"
-                  color="indigo"
-                  details={["DNS Forwarder vers S1", "KILL SWITCH", "Firewalling DMZ"]}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              {/* VLAN DMZ / Admin S2 */}
-              <div>
-                <VlanHeader name="VLAN DMZ" subnet="10.20.30.0/24" color="rose" />
-                <div className="grid grid-cols-1 gap-4">
-                  <Device
-                    icon={Lock}
-                    name="Bastion SSH"
-                    role="Passerelle d'administration"
-                    ip="10.20.30.10"
-                    color="rose"
-                    details={["Seule entrée publique autorisée"]}
-                  />
-                </div>
-              </div>
-
-              {/* VLAN Interne S2 */}
-              <div>
-                <VlanHeader name="VLAN Interne" subnet="10.20.20.0/24" color="cyan" />
-                <div className="grid grid-cols-1 gap-4">
-                  <Device
-                    icon={Server}
-                    name="Site Web"
-                    role="Application Métier"
-                    ip="10.20.20.10"
-                    color="cyan"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
+          <ArrowDown label="SSH (TCP/22)" color="amber" />
         </div>
 
-        {/* Legend / Info Footer */}
-        <footer className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 bg-white p-6 rounded-2xl border border-slate-200">
-          <div className="flex gap-4 items-center">
-            <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600">
-              <ShieldCheck size={20} />
-            </div>
-            <div>
-              <h5 className="font-bold text-xs uppercase tracking-wider text-slate-400">Sécurité</h5>
-              <p className="text-xs text-slate-600">VPN P2P chiffré & Kill Switch actif sur le Cloud</p>
-            </div>
+        {/* The two sites with the VPN bridge between them */}
+        <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
+          {/* VPN bridge — visible only on lg */}
+          <VpnBridge />
+
+          <SiteCard
+            kind="onprem"
+            title="Site 1 — On-Premise"
+            subtitle="Proxmox node 1"
+            fqdn="s1.projet.local"
+            lan="192.168.1.0/24"
+            pfsense={{
+              name: 'pfSense (S1)',
+              role: 'Router · Firewall · DNS · OpenVPN server',
+              ip: 'WAN: Epitech · LAN: 192.168.1.1 · Tunnel: 10.0.0.1',
+              vmId: 100,
+              badge: 'OpenVPN server',
+              details: [
+                'Default-deny on every interface',
+                'DNS forwarder → site2.local',
+                'Kill switch = toggle rule S1-WAN-01',
+              ],
+            }}
+            vlans={[
+              {
+                name: 'Admin',
+                subnet: '10.10.10.0/24',
+                tag: 'VLAN 10',
+                color: 'emerald',
+                hint: 'Privileged segment — admin workstations',
+                devices: [],
+              },
+              {
+                name: 'Services',
+                subnet: '10.20.20.0/24',
+                tag: 'VLAN 20',
+                color: 'blue',
+                hint: 'Internal services',
+                devices: [
+                  {
+                    icon: Layout,
+                    name: 'NetBox',
+                    role: 'IPAM · DCIM · API source of truth',
+                    ip: '10.20.20.10',
+                    vmId: 101,
+                    details: ['REST API for automation', 'Nightly pg_dump backups'],
+                  },
+                  {
+                    icon: Database,
+                    name: 'Elasticsearch + Logstash',
+                    role: 'Log ingest, search & retention',
+                    ip: '10.20.20.20',
+                    vmId: 102,
+                    details: [
+                      'Receives syslog from pfSense, Proxmox, bastion',
+                      'ILM 30 days · indexed by source',
+                    ],
+                  },
+                ],
+              },
+              {
+                name: 'DMZ',
+                subnet: '10.30.30.0/24',
+                tag: 'VLAN 30',
+                color: 'rose',
+                hint: 'Reserved (no public host on Site 1)',
+                devices: [],
+              },
+            ]}
+            footer="Logs land here · IPAM lives here"
+          />
+
+          <SiteCard
+            kind="cloud"
+            title="Site 2 — Remote / Cloud"
+            subtitle="Proxmox node 2"
+            fqdn="s2.projet.local"
+            lan="192.168.2.0/24"
+            pfsense={{
+              name: 'pfSense (S2)',
+              role: 'Router · Firewall · DNS · OpenVPN client',
+              ip: 'WAN: Epitech · LAN: 192.168.2.1 · Tunnel: 10.0.0.2',
+              vmId: 200,
+              badge: 'OpenVPN client',
+              details: [
+                'Default-deny on every interface',
+                'DNS forwarder → site1.local',
+                'Inbound NAT: TCP/22 → bastion only',
+              ],
+            }}
+            vlans={[
+              {
+                name: 'Admin',
+                subnet: '10.10.11.0/24',
+                tag: 'VLAN 10',
+                color: 'emerald',
+                hint: 'Privileged segment — reachable via VPN from S1 admin',
+                devices: [],
+              },
+              {
+                name: 'Services',
+                subnet: '10.20.21.0/24',
+                tag: 'VLAN 20',
+                color: 'blue',
+                hint: 'Internal services',
+                devices: [
+                  {
+                    icon: Server,
+                    name: 'Internal Web Server',
+                    role: 'Nginx · internal-only site',
+                    ip: '10.20.21.30',
+                    vmId: 202,
+                    details: [
+                      'Reachable from Services + Admin (both sites)',
+                      'Not exposed to Internet',
+                    ],
+                  },
+                ],
+              },
+              {
+                name: 'DMZ',
+                subnet: '10.30.31.0/24',
+                tag: 'VLAN 30',
+                color: 'rose',
+                hint: 'Single Internet-facing host',
+                devices: [
+                  {
+                    icon: Lock,
+                    name: 'Bastion',
+                    role: 'Hardened SSH jump host',
+                    ip: '10.30.31.10',
+                    vmId: 201,
+                    badge: 'public',
+                    details: [
+                      'SSH key only · fail2ban + ufw',
+                      'auth.log → Elasticsearch (S1) over VPN',
+                      'ProxyJump-only into Admin/Services',
+                    ],
+                  },
+                ],
+              },
+            ]}
+            footer="Only door from the Internet · Bastion is the funnel"
+          />
+        </div>
+
+        {/* Flow legend */}
+        <section className="mt-12">
+          <SectionTitle
+            title="What talks to what"
+            subtitle="Five flow types — every other path is denied by default"
+          />
+          <FlowLegend items={['inbound', 'vpn', 'jump', 'logs', 'killswitch']} />
+        </section>
+
+        {/* Security pillars */}
+        <section className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <PillarCard
+            icon={Shield}
+            title="Default deny everywhere"
+            text="Each pfSense interface starts with a deny-all baseline. Every allow rule has a stable ID (e.g. S1-VPN-03) that ends up in Elasticsearch — auditable."
+          />
+          <PillarCard
+            icon={Power}
+            title="Reversible kill switch"
+            text="One WAN rule we can toggle to drop the tunnel without losing admin access. LAN and Admin VLAN keep working — recovery stays one click away."
+          />
+          <PillarCard
+            icon={Key}
+            title="Single Internet entry"
+            text="Only the bastion is reachable from outside (TCP/22). Internal SSH is reached via ProxyJump. Every login event ships to Elasticsearch."
+          />
+        </section>
+
+        {/* Footer */}
+        <footer className="mt-12 pt-6 border-t border-slate-200 text-[11px] text-slate-500 flex flex-col md:flex-row items-start md:items-center justify-between gap-2">
+          <div>
+            Epitech · NSA-810-NCY-7 · Hugo Spriet · Julien Niederer · Hugo Bernier · Anne-Charlotte
+            Gipson
           </div>
-          <div className="flex gap-4 items-center border-x border-slate-100 px-6">
-            <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600">
-              <Settings size={20} />
-            </div>
-            <div>
-              <h5 className="font-bold text-xs uppercase tracking-wider text-slate-400">Gestion DNS</h5>
-              <p className="text-xs text-slate-600">Résolution croisée entre s1.projet et s2.projet</p>
-            </div>
-          </div>
-          <div className="flex gap-4 items-center">
-            <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center text-amber-600">
-              <Network size={20} />
-            </div>
-            <div>
-              <h5 className="font-bold text-xs uppercase tracking-wider text-slate-400">Architecture</h5>
-              <p className="text-xs text-slate-600">Segmentation par VLANs isolés sur Proxmox</p>
-            </div>
+          <div className="font-mono">
+            Tunnel 10.0.0.0/30 · S3 reserved: 10.10.12.0/24, 10.20.22.0/24, 10.30.32.0/24
           </div>
         </footer>
       </div>
     </div>
   );
 };
+
+const FactCard = ({ label, value, hint }) => (
+  <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 shadow-sm">
+    <div className="text-[10px] uppercase tracking-widest font-bold text-slate-400">
+      {label}
+    </div>
+    <div className="text-sm font-bold text-slate-800 mt-1">{value}</div>
+    <div className="text-[11px] text-slate-500 mt-0.5">{hint}</div>
+  </div>
+);
+
+const SectionTitle = ({ title, subtitle }) => (
+  <div className="mb-4">
+    <h3 className="text-lg font-bold text-slate-800">{title}</h3>
+    <p className="text-xs text-slate-500">{subtitle}</p>
+  </div>
+);
+
+const PillarCard = ({ icon: Icon, title, text }) => (
+  <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+    <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-3">
+      <Icon size={20} />
+    </div>
+    <h4 className="font-bold text-slate-800 text-sm">{title}</h4>
+    <p className="text-xs text-slate-600 leading-relaxed mt-1">{text}</p>
+  </div>
+);
+
+const ArrowDown = ({ label, color = 'indigo' }) => {
+  const colors = {
+    indigo: 'border-indigo-300 text-indigo-700 bg-indigo-50',
+    amber: 'border-amber-300 text-amber-700 bg-amber-50',
+  };
+  return (
+    <div className="flex flex-col items-center my-3">
+      <div className={`text-[10px] font-bold uppercase tracking-widest border ${colors[color]} px-2 py-0.5 rounded-full`}>
+        {label}
+      </div>
+      <div className="w-px h-6 bg-slate-300 mt-1" />
+    </div>
+  );
+};
+
+const VpnBridge = () => (
+  <div
+    className="hidden lg:flex absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 items-center gap-2 pointer-events-none"
+    aria-hidden
+  >
+    <div className="bg-indigo-600 text-white px-4 py-2 rounded-full shadow-xl flex items-center gap-2 pointer-events-auto">
+      <span className="text-[10px] font-bold uppercase tracking-widest">VPN tunnel</span>
+      <span className="text-[10px] font-mono opacity-80">AES-256-GCM</span>
+      <span className="text-[10px] font-mono bg-white/15 px-2 py-0.5 rounded-full">
+        10.0.0.0/30
+      </span>
+    </div>
+  </div>
+);
 
 export default App;
