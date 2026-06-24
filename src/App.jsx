@@ -56,7 +56,7 @@ const App = () => {
           <FactCard label="Sites" value="2 + 1 reserved" hint="S1 on-prem, S2 cloud, S3 ready" />
           <FactCard label="VMs / site" value="3 max" hint="Hard project constraint" />
           <FactCard label="VLANs" value="Admin / Services / DMZ" hint="Default-deny per zone" />
-          <FactCard label="Tunnel" value="OpenVPN P2P SSL/TLS" hint="AES-256-GCM · 10.0.0.0/30" />
+          <FactCard label="Tunnel" value="OpenVPN P2P SSL/TLS" hint="AES-256-GCM · UDP/1194" />
         </div>
 
         {/* Internet bubble */}
@@ -85,18 +85,18 @@ const App = () => {
           <SiteCard
             kind="onprem"
             title="Site 1 — On-Premise"
-            subtitle="Proxmox node 1"
-            fqdn="s1.projet.local"
+            subtitle="Proxmox node 1 · VMID 119 / 2033 / 3033"
+            fqdn="s1.epitech.local"
             lan="192.168.1.0/24"
             pfsense={{
-              name: 'pfSense (S1)',
+              name: 'pfSense-s1',
               role: 'Router · Firewall · DNS · OpenVPN server',
-              ip: 'WAN: Epitech · LAN: 192.168.1.1 · Tunnel: 10.0.0.1',
-              vmId: 100,
+              ip: 'WAN 5.196.45.3 · gateway .1 per VLAN · tunnel 10.0.0.1',
+              vmId: 119,
               badge: 'OpenVPN server',
               details: [
                 'Default-deny on every interface',
-                'DNS forwarder → site2.local',
+                'DNS forwarder → s2.epitech.local',
                 'Kill switch = toggle rule S1-WAN-01',
               ],
             }}
@@ -106,7 +106,76 @@ const App = () => {
                 subnet: '10.10.10.0/24',
                 tag: 'VLAN 10',
                 color: 'emerald',
-                hint: 'Privileged segment — admin workstations',
+                hint: 'Management plane — IPAM, secrets, observability',
+                devices: [
+                  {
+                    icon: Layout,
+                    name: 'NetBox',
+                    role: 'IPAM · DCIM · API source of truth',
+                    ip: '10.10.10.10:8000',
+                    vmId: 2033,
+                    details: ['REST API for automation', 'Source of truth before pfSense'],
+                  },
+                  {
+                    icon: Database,
+                    name: 'Vault + Elasticsearch + Grafana',
+                    role: 'Secrets store + observability (co-located on one VM)',
+                    ip: '10.10.10.11',
+                    vmId: 3033,
+                    badge: 'secrets + logs',
+                    details: [
+                      'Vault :8200 (KV v2 · unseal 3/5)',
+                      'Elasticsearch :9200 + Grafana :3000 (Docker)',
+                      'rsyslog from both sites → ES',
+                    ],
+                  },
+                ],
+              },
+              {
+                name: 'Services',
+                subnet: '10.10.20.0/24',
+                tag: 'VLAN 20',
+                color: 'blue',
+                hint: 'Internal services (reserved — no host yet on S1)',
+                devices: [],
+              },
+              {
+                name: 'DMZ',
+                subnet: '10.10.30.0/24',
+                tag: 'VLAN 30',
+                color: 'rose',
+                hint: 'Reserved (no public host on Site 1)',
+                devices: [],
+              },
+            ]}
+            footer="Admin VLAN = NetBox + the Vault VM · that VM also runs ES + Grafana (logs land here)"
+          />
+
+          <SiteCard
+            kind="cloud"
+            title="Site 2 — Remote / Cloud"
+            subtitle="Proxmox node 2 · VMID 144 / 176 / 2033"
+            fqdn="s2.epitech.local"
+            lan="192.168.2.0/24"
+            pfsense={{
+              name: 'pfSense-s2',
+              role: 'Router · Firewall · DNS · OpenVPN client',
+              ip: 'WAN 46.105.32.232 · gateway .1 per VLAN · tunnel 10.0.0.2',
+              vmId: 144,
+              badge: 'OpenVPN client',
+              details: [
+                'Default-deny on every interface',
+                'DNS forwarder → s1.epitech.local',
+                'Inbound NAT: TCP/22 → bastion only',
+              ],
+            }}
+            vlans={[
+              {
+                name: 'Admin',
+                subnet: '10.20.10.0/24',
+                tag: 'VLAN 10',
+                color: 'emerald',
+                hint: 'Privileged segment — reachable via VPN from S1 admin',
                 devices: [],
               },
               {
@@ -117,98 +186,31 @@ const App = () => {
                 hint: 'Internal services',
                 devices: [
                   {
-                    icon: Layout,
-                    name: 'NetBox',
-                    role: 'IPAM · DCIM · API source of truth',
-                    ip: '10.20.20.10',
-                    vmId: 101,
-                    details: ['REST API for automation', 'Nightly pg_dump backups'],
-                  },
-                  {
-                    icon: Database,
-                    name: 'Elasticsearch + Logstash',
-                    role: 'Log ingest, search & retention',
-                    ip: '10.20.20.20',
-                    vmId: 102,
-                    details: [
-                      'Receives syslog from pfSense, Proxmox, bastion',
-                      'ILM 30 days · indexed by source',
-                    ],
-                  },
-                ],
-              },
-              {
-                name: 'DMZ',
-                subnet: '10.30.30.0/24',
-                tag: 'VLAN 30',
-                color: 'rose',
-                hint: 'Reserved (no public host on Site 1)',
-                devices: [],
-              },
-            ]}
-            footer="Logs land here · IPAM lives here"
-          />
-
-          <SiteCard
-            kind="cloud"
-            title="Site 2 — Remote / Cloud"
-            subtitle="Proxmox node 2"
-            fqdn="s2.projet.local"
-            lan="192.168.2.0/24"
-            pfsense={{
-              name: 'pfSense (S2)',
-              role: 'Router · Firewall · DNS · OpenVPN client',
-              ip: 'WAN: Epitech · LAN: 192.168.2.1 · Tunnel: 10.0.0.2',
-              vmId: 200,
-              badge: 'OpenVPN client',
-              details: [
-                'Default-deny on every interface',
-                'DNS forwarder → site1.local',
-                'Inbound NAT: TCP/22 → bastion only',
-              ],
-            }}
-            vlans={[
-              {
-                name: 'Admin',
-                subnet: '10.10.11.0/24',
-                tag: 'VLAN 10',
-                color: 'emerald',
-                hint: 'Privileged segment — reachable via VPN from S1 admin',
-                devices: [],
-              },
-              {
-                name: 'Services',
-                subnet: '10.20.21.0/24',
-                tag: 'VLAN 20',
-                color: 'blue',
-                hint: 'Internal services',
-                devices: [
-                  {
                     icon: Server,
-                    name: 'Internal Web Server',
+                    name: 'webserver-s2',
                     role: 'Nginx · internal-only site',
-                    ip: '10.20.21.30',
-                    vmId: 202,
+                    ip: '10.20.20.10:80',
+                    vmId: 176,
                     details: [
-                      'Reachable from Services + Admin (both sites)',
-                      'Not exposed to Internet',
+                      'Reachable from Services + Admin (both sites, via VPN)',
+                      'Not exposed to the Internet',
                     ],
                   },
                 ],
               },
               {
                 name: 'DMZ',
-                subnet: '10.30.31.0/24',
+                subnet: '10.20.30.0/24',
                 tag: 'VLAN 30',
                 color: 'rose',
                 hint: 'Single Internet-facing host',
                 devices: [
                   {
                     icon: Lock,
-                    name: 'Bastion',
+                    name: 'bastion-s2',
                     role: 'Hardened SSH jump host',
-                    ip: '10.30.31.10',
-                    vmId: 201,
+                    ip: '10.20.30.10:22',
+                    vmId: 2033,
                     badge: 'public',
                     details: [
                       'SSH key only · fail2ban + ufw',
@@ -258,7 +260,7 @@ const App = () => {
             Gipson
           </div>
           <div className="font-mono">
-            Tunnel 10.0.0.0/30 · S3 reserved: 10.10.12.0/24, 10.20.22.0/24, 10.30.32.0/24
+            Tunnel 10.0.0.1/30 ↔ 10.0.0.2/30 · s2s 10.100.0.0/24 · admin VPN 10.200.0.0/24 · S3 reserved 10.30.10/20/30.0/24
           </div>
         </footer>
       </div>
