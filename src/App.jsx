@@ -192,8 +192,8 @@ const App = () => {
                     ip: '10.20.20.10:80',
                     vmId: 176,
                     details: [
-                      'Reachable from Services + Admin (both sites, via VPN)',
-                      'Not exposed to the Internet',
+                      'VM running (VMID 176) · internal-only',
+                      'Not exposed to the Internet (no inbound NAT)',
                     ],
                   },
                 ],
@@ -213,8 +213,9 @@ const App = () => {
                     vmId: 2033,
                     badge: 'public',
                     details: [
-                      'SSH key only · fail2ban + ufw',
-                      'auth.log → Elasticsearch (S1) over VPN',
+                      'SSH key-only · login user bastion-gr33',
+                      'SSH keys stored in Vault (KeysBastion×4)',
+                      'auth.log → Elasticsearch (S1) via rsyslog (configured)',
                       'ProxyJump-only into Admin/Services',
                     ],
                   },
